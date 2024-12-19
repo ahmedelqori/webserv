@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:19 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/19 17:49:32 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/19 18:39:25 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,18 +141,21 @@ void                                ServerConfig::setErrorPages(std::string &key
 
                     /* ---- Class ----*/
 
-ConfigParser::ConfigParser():currentServerState(HTTP), currentLocationState(PATH), currentErrorPages(ERROR_CODE), currentRedirectState(STATUS_CODE){}
+ConfigParser::ConfigParser():currentServerState(HTTP), currentLocationState(PATH), currentErrorPages(ERROR_CODE), currentRedirectState(STATUS_CODE), index(0){}
                    
                     /* ---- METHODS ----*/
 
 void    ConfigParser::parse()
 {
-    for (int index = 0; index < this->fileContent.size(); index++)
+    while (this->index < this->fileContent.size() && this->index < 4)
     {
         switch (currentServerState)
         {
             case HTTP:
-                std::cout << "HTTP\n";
+                this->handleHttpState();
+                break;
+            case SERVER:
+                this->handleServerState();
                 break;
             default:
                 break;
@@ -216,6 +219,55 @@ void    ConfigParser::deleteEmptyLines()
         if (this->fileContent[index] == "")
             this->fileContent.erase(this->fileContent.begin() + index);
 }
+
+
+void    ConfigParser::handleHttpState()
+{
+    static bool httpStart = false;
+
+    if (!httpStart)
+    {
+        std::cout << this->fileContent[this->index] << std::endl; // Temp
+        if (this->fileContent[this->index++] != "http")
+            throw std::runtime_error("Syntax Error::\t< http > ");
+        if (this->fileContent[this->index++] != O_PAR)
+            throw std::runtime_error("Syntax Error::\t< open parenthesis doesnt exist for Http> ");
+        this->currentServerState = SERVER;
+        httpStart = true;
+    }
+    else
+    {
+        if (this->fileContent[this->index] != C_PAR && this->fileContent.size() == this->index + 1)
+                throw std::runtime_error("Syntax Error::\t< close parenthesis doesnt exist for Http> ");
+        else if (this->fileContent[this->index] != C_PAR);
+            this->currentServerState = SERVER;
+    }
+}
+
+void    ConfigParser::handleServerState()
+{
+    static bool serverStart = false;
+    
+    if (!serverStart)
+    { 
+        std::cout << this->fileContent[this->index] << std::endl; // Temp
+        if (this->fileContent[this->index++] != "server")
+            throw std::runtime_error("Syntax Error::\t< server > ");
+        if (this->fileContent[this->index++] != O_PAR)
+            throw std::runtime_error("Syntax Error::\t< open parenthesis doesnt exist for Server > ");
+        serverStart = true;
+        // this->currentServerState = SERVER_NAME;
+    }
+    else
+    {
+        serverStart = false;
+        if (this->fileContent[this->index++] != C_PAR)
+            throw std::runtime_error("Syntax Error::\t< close parenthesis doesnt exist for Server > ");
+        else
+            this->currentServerState = HTTP;
+    }       
+}
+
                     /* ---- GET ----*/
 
                     /* ---- SET ----*/
