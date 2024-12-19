@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:17 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/19 17:06:45 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/19 18:14:33 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,10 +14,11 @@
 #define CONFIG_PARSER_HPP
 
 #include <map> 
+#include <string> 
+#include "Utils.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <bits/stdc++.h>
-#include "Utils.hpp"
 
 class LocationConfig
 {
@@ -109,6 +110,7 @@ class ConfigParser
         };
     public:
         std::vector<std::string> fileContent;
+        int                      index;
 
         ServerState         currentServerState;
         ErrorPagesState     currentErrorPages;
@@ -119,6 +121,13 @@ class ConfigParser
         
         void    parseFile(const char *file_path);
         void    fileToVector(std::ifstream &file);
+        void    checkClosedParenthesis();
+        void    deleteEmptyLines();
+
+        void    parse();
+
+        void    handleHttpState();
+        void    handleServerState();
 
 };
 

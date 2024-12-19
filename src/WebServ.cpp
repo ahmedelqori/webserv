@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 16:31:14 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/19 17:02:55 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/19 17:26:52 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ int main(int ac, char **av, char **env)
         }
         configParser.parseFile(av[1]);
     } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
+        std::cerr << std::endl <<e.what() << std::endl << std::endl;
         return 1; 
     }
 }
