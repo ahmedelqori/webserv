@@ -23,25 +23,6 @@ void printnl(std::string &str)
 
 Http::Http():currentServerConfig(HTTP), currentErrorPages(ERROR_CODE), currentLocationState(PATH),currentRedirectState(STATUS_CODE){}
 
-std::string Server::getHost() const
-{
-    return this->host;
-}
-void Server::setHost(std::string &str)
-{
-    this->host = str;
-}
-
-std::string Server::getServerName() const
-{
-    return this->serverNames;
-}
-void Server::setServerName(std::string &str)
-{
-    this->serverNames = str;
-}
-
-
 void Http::CheckHttpKey(std::string &line)
 {
     if (line == "http")
@@ -52,9 +33,6 @@ void Http::CheckHttpKey(std::string &line)
         currentServerConfig  =ERROR;
     }
 }
-
-void Http::handleLocations()
-{}
 
 
 std::string trim(const std::string& str) {
