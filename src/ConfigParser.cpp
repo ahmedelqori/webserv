@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:19 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/19 17:45:44 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/19 17:49:32 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,7 +147,17 @@ ConfigParser::ConfigParser():currentServerState(HTTP), currentLocationState(PATH
 
 void    ConfigParser::parse()
 {
-    
+    for (int index = 0; index < this->fileContent.size(); index++)
+    {
+        switch (currentServerState)
+        {
+            case HTTP:
+                std::cout << "HTTP\n";
+                break;
+            default:
+                break;
+        }
+    }
 }
 
 void    ConfigParser::parseFile(const char *file_path)
@@ -159,6 +169,7 @@ void    ConfigParser::parseFile(const char *file_path)
         throw std::runtime_error("Error: Filepath");
     this->fileToVector(file);
     this->checkClosedParenthesis();
+    this->parse();
 }
 
 void    ConfigParser::fileToVector(std::ifstream &file)
