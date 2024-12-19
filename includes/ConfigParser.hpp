@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:17 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/19 17:39:11 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/19 17:45:04 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,6 +122,8 @@ class ConfigParser
         void    fileToVector(std::ifstream &file);
         void    checkClosedParenthesis();
         void    deleteEmptyLines();
+
+        void    parse();
 
 };
 
