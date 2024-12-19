@@ -1,0 +1,25 @@
+http:
+ - server:
+	server_names: ael-qori.42.fr
+		host_port: 0.0.0.0:1337
+		error_pages:
+		- page: 404 /www/html/errors/404.html
+		- page: 405 /www/html/errors/405.html
+	allow_methods: GET POST
+  client_max_body_size: 10M
+  locations:
+  - path: /home
+	methods:  GET
+	root: /home.html
+	directory_listing: on
+	redirection:
+	- file: 403  /403.html
+	- file: 402  /402.html
+  - path: /home/upload
+	methods:  GET
+	root: /home/upload.html
+	directory_listing: off
+	redirection:
+	  - file: 403 /403.html
+	  - file: 401 /401.html
+
