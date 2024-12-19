@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:19 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/19 17:15:58 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/19 17:25:05 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,6 +153,7 @@ void    ConfigParser::parseFile(const char *file_path)
     if (!file.is_open())
         throw std::runtime_error("Error: Filepath");
     this->fileToVector(file);
+    this->checkClosedParenthesis();
 }
 
 void    ConfigParser::fileToVector(std::ifstream &file)
@@ -166,6 +167,30 @@ void    ConfigParser::fileToVector(std::ifstream &file)
         if (line != "")
             this->fileContent.push_back(trim(line));
     }
+}
+
+bool    ConfigParser::checkClosedParenthesis()
+{
+    int countOpenedParenthesis = 0, countClosedParenthesis = 0, index , i, tmp;
+    std::ostringstream oss;
+
+    for(index = 0; index < this->fileContent.size(); index++)
+    {
+        tmp = 0;
+        for (i = 0; i < this->fileContent[index].size(); ++i)
+        {
+            if (this->fileContent[index][i] == '{' &&( tmp = 1))
+                countOpenedParenthesis++;
+            if (this->fileContent[index][i] == '}' && (tmp = 1))
+                countClosedParenthesis++;
+        }
+        if (tmp && this->fileContent[index].size() != 1)
+        {
+            oss << index + 1;
+            throw std::runtime_error("Error:: Line " + oss.str());
+        }
+    }
+    return countClosedParenthesis == countOpenedParenthesis;
 }
                     /* ---- GET ----*/
 
