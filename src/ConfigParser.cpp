@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:19 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/19 16:40:42 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/19 17:15:58 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,13 +141,31 @@ void                                ServerConfig::setErrorPages(std::string &key
 
                     /* ---- Class ----*/
 
-ConfigPraser::ConfigPraser():currentServerState(HTTP), currentLocationState(PATH), currentErrorPages(ERROR_CODE), currentRedirectState(STATUS_CODE){}
+ConfigParser::ConfigParser():currentServerState(HTTP), currentLocationState(PATH), currentErrorPages(ERROR_CODE), currentRedirectState(STATUS_CODE){}
                    
                     /* ---- METHODS ----*/
 
-void    ConfigPraser::parseFile(std::string &file_path)
+void    ConfigParser::parseFile(const char *file_path)
 {
-    
+    std::ifstream file;
+
+    file.open(file_path, std::ifstream::in);
+    if (!file.is_open())
+        throw std::runtime_error("Error: Filepath");
+    this->fileToVector(file);
+}
+
+void    ConfigParser::fileToVector(std::ifstream &file)
+{
+    std::string     line;
+    std::string     pureLine;
+
+    while(std::getline(file, line))
+    {
+        line = trim(line);
+        if (line != "")
+            this->fileContent.push_back(trim(line));
+    }
 }
                     /* ---- GET ----*/
 

@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 16:43:28 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/19 16:45:05 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/19 17:15:14 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,5 @@
 #include <iostream>
 
 std::string trim(const std::string& str);
-
 
 #endif

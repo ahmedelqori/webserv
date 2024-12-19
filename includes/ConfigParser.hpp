@@ -6,16 +6,19 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:17 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/19 16:40:21 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/19 17:06:45 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CONFIG_PARSER_HPP
 #define CONFIG_PARSER_HPP
 
-#include <iostream>
-#include <bits/stdc++.h>
 #include <map> 
+#include <iostream>
+#include <stdexcept>
+#include <bits/stdc++.h>
+#include "Utils.hpp"
+
 class LocationConfig
 {
     private:
@@ -66,7 +69,7 @@ class ServerConfig
     
 };
 
-class ConfigPraser
+class ConfigParser
 {
     private:
         std::vector <ServerConfig> servers;
@@ -105,14 +108,17 @@ class ConfigPraser
             ERROR
         };
     public:
+        std::vector<std::string> fileContent;
+
         ServerState         currentServerState;
         ErrorPagesState     currentErrorPages;
         LocationsState      currentLocationState;
         RedirectionsState   currentRedirectState;
         
-        ConfigPraser();
-    
-        void    parseFile(std::string &file_path);
+        ConfigParser();
+        
+        void    parseFile(const char *file_path);
+        void    fileToVector(std::ifstream &file);
 
 };
 
