@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:19 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/19 17:25:05 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/19 17:42:36 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -162,14 +162,10 @@ void    ConfigParser::fileToVector(std::ifstream &file)
     std::string     pureLine;
 
     while(std::getline(file, line))
-    {
-        line = trim(line);
-        if (line != "")
-            this->fileContent.push_back(trim(line));
-    }
+        this->fileContent.push_back(line);
 }
 
-bool    ConfigParser::checkClosedParenthesis()
+void    ConfigParser::checkClosedParenthesis()
 {
     int countOpenedParenthesis = 0, countClosedParenthesis = 0, index , i, tmp;
     std::ostringstream oss;
@@ -184,13 +180,25 @@ bool    ConfigParser::checkClosedParenthesis()
             if (this->fileContent[index][i] == '}' && (tmp = 1))
                 countClosedParenthesis++;
         }
+        this->fileContent[index] = trim(this->fileContent[index]);
         if (tmp && this->fileContent[index].size() != 1)
         {
             oss << index + 1;
-            throw std::runtime_error("Error:: Line " + oss.str());
+            throw std::runtime_error("Syntax Error:: Line " + oss.str());
         }
     }
-    return countClosedParenthesis == countOpenedParenthesis;
+    if (countClosedParenthesis != countOpenedParenthesis)
+        throw std::runtime_error("Syntax Error:: Missing closing parenthesis Or parenthsis not in single line");
+    this->deleteEmptyLines();
+}
+
+void    ConfigParser::deleteEmptyLines()
+{
+    int index = -1;
+
+    while (++index < this->fileContent.size())
+        if (this->fileContent[index] == "")
+            this->fileContent.erase(this->fileContent.begin() + index);
 }
                     /* ---- GET ----*/
 
