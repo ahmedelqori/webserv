@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:17 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/20 17:06:34 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/20 18:55:45 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,8 @@ class LocationConfig
         std::map <std::string, bool>        methods;
         std::map <std::string, std::string> redirections;
     public:
+        LocationConfig();
+
         bool                                getDirectoryListing() const;
         std::string                         getPath() const; 
         std::string                         getRoot() const;
@@ -41,6 +43,9 @@ class LocationConfig
         void                                setMethods(std::string &key, bool value);
         void                                setRedirections(std::string &key, std::string &value);
         
+        bool                                locationMethodValue(std::string &method);
+        bool                                locationMethodExist(std::string &method);
+        void                                locationUpdateMethod(std::string &str, bool b);
 };
 
 class ServerConfig
@@ -98,6 +103,7 @@ class ConfigParser
             PATH,
             METHODS,
             ROOT,
+            CLIENT_MAX,
             DIRECTORY_LISING,
             REDIRECTIONS,
             END_PREFIX,
@@ -157,6 +163,8 @@ class ConfigParser
         void    handlePathState();
         void    handlePrefixState();
         void    handleMethodsPrefixState();
+        void    handleRootPrefixState();
+        // void    handleClientMaxBodySizePrefixState();
 };
 
 #endif
