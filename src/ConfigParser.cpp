@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:19 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/20 14:40:24 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/20 15:41:35 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,6 +110,19 @@ std::map<std::string, std::string>  ServerConfig::getErrorPages() const
     return this->errorPages;
 }
 
+bool                                ServerConfig::methodValue(std::string &method)
+{
+    return this->allowMethods[method];
+}
+
+bool                                ServerConfig::methodExist(std::string &method)
+{
+    if (this->allowMethods.find(method) == this->allowMethods.end())
+        return false;
+    return true;
+}
+
+
                     /* ---- SET ----*/
 
 void                                ServerConfig::setClientMaxBodySize(int size)
@@ -147,6 +160,11 @@ void                                ServerConfig::setErrorPages(std::string &key
     this->errorPages.insert(std::make_pair(key, value));   
 }
 
+void                                ServerConfig::updateMethod(std::string &str, bool b)
+{
+    this->allowMethods[str] = b;
+}
+
 /* ================== Config Parser ==================*/
 
                     /* ---- Class ----*/
@@ -165,6 +183,7 @@ void    ConfigParser::parse()
             case SERVER:            this->handleServerState();      break;
             case HOST_PORT:         this->handleHostPortState();    break;
             case SERVER_NAME:       this->handleServerNameState();  break;
+            case ALLOW_METHODS:     this->handleMethodsState();     break;
             case ERROR_PAGES:       this->parseErrorPages();        break;
             default:                                                break;
         }
@@ -277,6 +296,26 @@ void    ConfigParser::handleServerNameState()
     server_names = splitString(this->fileContent[this->index++], " \t\n\r\f\v");
     if (server_names[0] != "server_names" || server_names.size() < 2) throw std::runtime_error("Syntax Error::\t< server_names in server " + itoa(this->current) + " >");
     while (++i < server_names.size()) this->servers[this->current].setServerNames(server_names[i]);
+    this->currentServerState = ALLOW_METHODS;
+}
+ // ...........................................
+void    ConfigParser::handleMethodsState()
+{
+    std::vector<std::string>        methods;
+    std::string methodsInit[3] =    {std::string("GET"), std::string("POST"), std::string("DELETE")};
+    int                      i =    -1;
+
+    if (!this->servers[this->current].getAllowMethods().empty()) throw std::runtime_error("Syntax Error::\t< Duplicated methods > ");
+    methods = splitString(this->fileContent[this->index++], " \t\n\r\f\v");
+    if (methods[0] != "methods" || methods.size() < 2) throw std::runtime_error("Syntax Error::\t< methods in server " + itoa(this->current) + " >");
+    while (++i < 3) this->servers[this->current].setAllowMethods(methodsInit[i], false);
+    i = 0;
+    while (++i < methods.size())
+    {
+        if (this->servers[this->current].methodExist(methods[i]) == false) throw std::runtime_error("Syntax Error::\t< method doesnt exist in server " + itoa(this->current) + " >");
+        if (this->servers[this->current].methodValue(methods[i]) == true) throw std::runtime_error("Syntax Error:: \t< method " + methods[i]+ " already exist in server " + itoa(this->current) + " >");
+        this->servers[this->current].updateMethod(methods[i], true);
+    }
     this->currentServerState = ERROR_PAGES;
 }
 
@@ -322,6 +361,7 @@ void    ConfigParser::handleErrorFileState()
     this->servers[this->current].setErrorPages(error_page[1], error_page[2]);
     this->currentErrorPages = ERROR;
 }
+
 
                     /* ---- GET ----*/
 

@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:17 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/20 13:57:52 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/20 15:01:55 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,9 @@ class ServerConfig
         void                                setAllowMethods(std::string &key, bool value);
         void                                setErrorPages(std::string &key, std::string &value);
     
-    
+        bool                                methodValue(std::string &method);
+        bool                                methodExist(std::string &method);
+        void                                updateMethod(std::string &str, bool b);
 };
 
 class ConfigParser
@@ -136,6 +138,7 @@ class ConfigParser
         void    handleServerState();
         void    handleHostPortState();
         void    handleServerNameState();
+        void    handleMethodsState();
         void    handleErrorPagesState();
         void    handleErrorFileState();
 
