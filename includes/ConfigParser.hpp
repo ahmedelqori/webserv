@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:17 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/19 18:14:33 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/20 13:57:52 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ class ServerConfig
 {
     private:
         int                                 clientMaxBodySize;
+        int                                 port;
         std::string                         host;
         std::vector<std::string>            serverNames;
         std::vector<LocationConfig>         locations;
@@ -54,14 +55,16 @@ class ServerConfig
         std::map<std::string, std::string>  errorPages;
     public:
         int                                 getClientMaxBodySize() const;
+        int                                 getPort() const;
         std::string                         getHost() const;
         std::vector<std::string>            getServerNames() const;
         std::vector<LocationConfig>         getLocations() const;
         std::map<std::string, bool>         getAllowMethods() const;
         std::map<std::string, std::string>  getErrorPages() const;
 
-        void                                setClientMaxBodySize(int size);
+        void                                setPort(int port);
         void                                setHost(std::string &host);
+        void                                setClientMaxBodySize(int size);
         void                                setServerNames(std::string &server_name);
         void                                setLocations(LocationConfig &location);
         void                                setAllowMethods(std::string &key, bool value);
@@ -76,8 +79,9 @@ class ConfigParser
         std::vector <ServerConfig> servers;
         enum  ErrorPagesState
         {
-            ERROR_CODE,
-            FILE,
+            ERROR,
+            ERROR_FILE,
+            DONE_ERROR_PAGES
         };
 
         enum  RedirectionsState
@@ -100,16 +104,17 @@ class ConfigParser
         {
             HTTP,
             SERVER,
-            SERVER_NAME,
             HOST_PORT,
+            SERVER_NAME,
             ERROR_PAGES,
             ALLOW_METHODS,
             CLIENT_MAX_BODY_SIZE,
             LOCATIONS,
-            ERROR
+            DONE
         };
     public:
         std::vector<std::string> fileContent;
+        int                      current;
         int                      index;
 
         ServerState         currentServerState;
@@ -125,9 +130,14 @@ class ConfigParser
         void    deleteEmptyLines();
 
         void    parse();
+        void    parseErrorPages();
 
         void    handleHttpState();
         void    handleServerState();
+        void    handleHostPortState();
+        void    handleServerNameState();
+        void    handleErrorPagesState();
+        void    handleErrorFileState();
 
 };
 
