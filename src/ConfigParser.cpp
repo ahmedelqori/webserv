@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:19 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/19 18:39:25 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/20 12:30:46 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,13 +141,13 @@ void                                ServerConfig::setErrorPages(std::string &key
 
                     /* ---- Class ----*/
 
-ConfigParser::ConfigParser():currentServerState(HTTP), currentLocationState(PATH), currentErrorPages(ERROR_CODE), currentRedirectState(STATUS_CODE), index(0){}
+ConfigParser::ConfigParser():currentServerState(HTTP), currentLocationState(PATH), currentErrorPages(ERROR_CODE), currentRedirectState(STATUS_CODE), index(0),current(0){}
                    
                     /* ---- METHODS ----*/
 
 void    ConfigParser::parse()
 {
-    while (this->index < this->fileContent.size() && this->index < 4)
+    while (this->index < this->fileContent.size() && currentServerState != DONE)
     {
         switch (currentServerState)
         {
@@ -157,6 +157,8 @@ void    ConfigParser::parse()
             case SERVER:
                 this->handleServerState();
                 break;
+            case SERVER_NAME:
+                this->handleServerNameState();
             default:
                 break;
         }
@@ -187,7 +189,6 @@ void    ConfigParser::fileToVector(std::ifstream &file)
 void    ConfigParser::checkClosedParenthesis()
 {
     int countOpenedParenthesis = 0, countClosedParenthesis = 0, index , i, tmp;
-    std::ostringstream oss;
 
     for(index = 0; index < this->fileContent.size(); index++)
     {
@@ -201,10 +202,7 @@ void    ConfigParser::checkClosedParenthesis()
         }
         this->fileContent[index] = trim(this->fileContent[index]);
         if (tmp && this->fileContent[index].size() != 1)
-        {
-            oss << index + 1;
-            throw std::runtime_error("Syntax Error:: Line " + oss.str());
-        }
+            throw std::runtime_error("Syntax Error:: Line " + itoa(index + 1));
     }
     if (countClosedParenthesis != countOpenedParenthesis)
         throw std::runtime_error("Syntax Error:: Missing closing parenthesis Or parenthsis not in single line");
@@ -227,7 +225,6 @@ void    ConfigParser::handleHttpState()
 
     if (!httpStart)
     {
-        std::cout << this->fileContent[this->index] << std::endl; // Temp
         if (this->fileContent[this->index++] != "http")
             throw std::runtime_error("Syntax Error::\t< http > ");
         if (this->fileContent[this->index++] != O_PAR)
@@ -237,35 +234,55 @@ void    ConfigParser::handleHttpState()
     }
     else
     {
-        if (this->fileContent[this->index] != C_PAR && this->fileContent.size() == this->index + 1)
+        if (this->fileContent[++this->index] != C_PAR && this->fileContent.size() == this->index + 1)
                 throw std::runtime_error("Syntax Error::\t< close parenthesis doesnt exist for Http> ");
-        else if (this->fileContent[this->index] != C_PAR);
+        else if (this->fileContent[this->index] != C_PAR)
             this->currentServerState = SERVER;
+        else
+            this->currentServerState = DONE;
     }
 }
 
 void    ConfigParser::handleServerState()
 {
     static bool serverStart = false;
-    
+
+    this->servers.push_back(ServerConfig());
     if (!serverStart)
     { 
-        std::cout << this->fileContent[this->index] << std::endl; // Temp
         if (this->fileContent[this->index++] != "server")
             throw std::runtime_error("Syntax Error::\t< server > ");
         if (this->fileContent[this->index++] != O_PAR)
             throw std::runtime_error("Syntax Error::\t< open parenthesis doesnt exist for Server > ");
         serverStart = true;
-        // this->currentServerState = SERVER_NAME;
+        this->currentServerState = SERVER_NAME;
     }
     else
     {
         serverStart = false;
-        if (this->fileContent[this->index++] != C_PAR)
+        if (this->fileContent[this->index] != C_PAR)
             throw std::runtime_error("Syntax Error::\t< close parenthesis doesnt exist for Server > ");
         else
+        {
+            this->current++;
             this->currentServerState = HTTP;
+        }
     }       
+}
+
+void    ConfigParser::handleServerNameState()
+{
+    std::vector<std::string> server_names;
+    int                      i = 0;
+
+    if (!this->servers[this->current].getServerNames().empty())
+        throw std::runtime_error("Syntax Error::\t< Duplicated ServerName > ");
+    server_names = splitString(this->fileContent[this->index++], " \t\n\r\f\v");
+    if (server_names[0] != "server_names")
+        throw std::runtime_error("Syntax Error::\t< server_names in server " + itoa(this->current) + " >");
+    while (++i < server_names.size())
+        this->servers[this->current].setServerNames(server_names[i]);
+    this->currentServerState = SERVER;
 }
 
                     /* ---- GET ----*/
