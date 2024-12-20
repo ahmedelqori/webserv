@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:17 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/20 15:01:55 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/20 17:06:34 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,16 +46,16 @@ class LocationConfig
 class ServerConfig
 {
     private:
-        int                                 clientMaxBodySize;
         int                                 port;
+        std::string                         clientMaxBodySize;
         std::string                         host;
         std::vector<std::string>            serverNames;
         std::vector<LocationConfig>         locations;
         std::map<std::string, bool>         allowMethods;
         std::map<std::string, std::string>  errorPages;
     public:
-        int                                 getClientMaxBodySize() const;
         int                                 getPort() const;
+        std::string                         getClientMaxBodySize() const;
         std::string                         getHost() const;
         std::vector<std::string>            getServerNames() const;
         std::vector<LocationConfig>         getLocations() const;
@@ -64,7 +64,7 @@ class ServerConfig
 
         void                                setPort(int port);
         void                                setHost(std::string &host);
-        void                                setClientMaxBodySize(int size);
+        void                                setClientMaxBodySize(std::string &size);
         void                                setServerNames(std::string &server_name);
         void                                setLocations(LocationConfig &location);
         void                                setAllowMethods(std::string &key, bool value);
@@ -92,14 +92,22 @@ class ConfigParser
             REDIRECTION_FILE  
         };
 
-        enum  LocationsState
+        enum  PrefixState
         {
+            PREFIX,
             PATH,
             METHODS,
             ROOT,
             DIRECTORY_LISING,
-            REDIRECTIONS
-            
+            REDIRECTIONS,
+            END_PREFIX,
+        };
+
+        enum  LocationsState
+        {
+            LOCATION,
+            PREFIX_RED,
+            END_LOCATION
         };
 
         enum  ServerState
@@ -123,6 +131,7 @@ class ConfigParser
         ErrorPagesState     currentErrorPages;
         LocationsState      currentLocationState;
         RedirectionsState   currentRedirectState;
+        PrefixState         currentPrefixState;
         
         ConfigParser();
         
@@ -133,6 +142,8 @@ class ConfigParser
 
         void    parse();
         void    parseErrorPages();
+        void    parseLocations();
+        void    parsePrefix();
 
         void    handleHttpState();
         void    handleServerState();
@@ -141,7 +152,11 @@ class ConfigParser
         void    handleMethodsState();
         void    handleErrorPagesState();
         void    handleErrorFileState();
-
+        void    handleClientMaxBodySizeState();
+        void    handleLocationState();
+        void    handlePathState();
+        void    handlePrefixState();
+        void    handleMethodsPrefixState();
 };
 
 #endif

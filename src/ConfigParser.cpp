@@ -6,7 +6,7 @@
 /*   By: ael-qori <ael-qori@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/19 15:51:19 by ael-qori          #+#    #+#             */
-/*   Updated: 2024/12/20 15:41:35 by ael-qori         ###   ########.fr       */
+/*   Updated: 2024/12/20 17:13:56 by ael-qori         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ void    LocationConfig::setRedirections(std::string &key, std::string &value)
 
                     /* ---- GET ----*/
 
-int                                 ServerConfig::getClientMaxBodySize() const
+std::string                         ServerConfig::getClientMaxBodySize() const
 {
     return this->clientMaxBodySize;
 }
@@ -125,7 +125,7 @@ bool                                ServerConfig::methodExist(std::string &metho
 
                     /* ---- SET ----*/
 
-void                                ServerConfig::setClientMaxBodySize(int size)
+void                                ServerConfig::setClientMaxBodySize(std::string &size)
 {
     this->clientMaxBodySize = size;
 }
@@ -169,7 +169,7 @@ void                                ServerConfig::updateMethod(std::string &str,
 
                     /* ---- Class ----*/
 
-ConfigParser::ConfigParser():currentServerState(HTTP), currentLocationState(PATH), currentErrorPages(ERROR), currentRedirectState(STATUS_CODE), index(0),current(0){}
+ConfigParser::ConfigParser():currentServerState(HTTP), currentLocationState(LOCATION), currentErrorPages(ERROR), currentRedirectState(STATUS_CODE), currentPrefixState(METHODS),index(0),current(0){}
                    
                     /* ---- METHODS ----*/
 
@@ -179,13 +179,15 @@ void    ConfigParser::parse()
     {
         switch (currentServerState)
         {
-            case HTTP:              this->handleHttpState();        break;
-            case SERVER:            this->handleServerState();      break;
-            case HOST_PORT:         this->handleHostPortState();    break;
-            case SERVER_NAME:       this->handleServerNameState();  break;
-            case ALLOW_METHODS:     this->handleMethodsState();     break;
-            case ERROR_PAGES:       this->parseErrorPages();        break;
-            default:                                                break;
+            case HTTP                 : this->handleHttpState()             ;   break;
+            case SERVER               : this->handleServerState()           ;   break;
+            case HOST_PORT            : this->handleHostPortState()         ;   break;
+            case SERVER_NAME          : this->handleServerNameState()       ;   break;
+            case ALLOW_METHODS        : this->handleMethodsState()          ;   break;
+            case ERROR_PAGES          : this->parseErrorPages()             ;   break;
+            case CLIENT_MAX_BODY_SIZE : this->handleClientMaxBodySizeState();   break;
+            case LOCATIONS            : this->parseLocations()              ;   break;            
+            default:                                                            break;
         }
     }
 }
@@ -298,7 +300,6 @@ void    ConfigParser::handleServerNameState()
     while (++i < server_names.size()) this->servers[this->current].setServerNames(server_names[i]);
     this->currentServerState = ALLOW_METHODS;
 }
- // ...........................................
 void    ConfigParser::handleMethodsState()
 {
     std::vector<std::string>        methods;
@@ -316,9 +317,19 @@ void    ConfigParser::handleMethodsState()
         if (this->servers[this->current].methodValue(methods[i]) == true) throw std::runtime_error("Syntax Error:: \t< method " + methods[i]+ " already exist in server " + itoa(this->current) + " >");
         this->servers[this->current].updateMethod(methods[i], true);
     }
-    this->currentServerState = ERROR_PAGES;
+    this->currentServerState = CLIENT_MAX_BODY_SIZE;
 }
 
+void    ConfigParser::handleClientMaxBodySizeState()
+{
+    std::vector<std::string> clientMaxBodySize;
+    
+    if (!this->servers[this->current].getClientMaxBodySize().empty()) throw std::runtime_error("Syntax Error::\t< Duplicated ClientMaxBody > ");
+    clientMaxBodySize = splitString(this->fileContent[this->index++], " \t\n\r\f\v");
+    if (clientMaxBodySize[0] != "client_max_body_size" || clientMaxBodySize.size() != 2) throw std::runtime_error("Syntax Error::\t< clientMaxBody in server " + itoa(this->current) + " >");
+    this->servers[this->current].setClientMaxBodySize(clientMaxBodySize[0]);
+    this->currentServerState = ERROR_PAGES; 
+}
 
 void    ConfigParser::parseErrorPages()
 {
@@ -348,7 +359,7 @@ void    ConfigParser::handleErrorPagesState()
     else
     {
         if (this->fileContent[this->index] != C_PAR) this->currentErrorPages = ERROR_FILE;
-        else (this->index++, this->currentErrorPages = DONE_ERROR_PAGES, this->currentServerState = SERVER, errorPagesState = false);
+        else (this->index++, this->currentErrorPages = DONE_ERROR_PAGES, this->currentServerState = LOCATIONS, errorPagesState = false);
     }
 }
 
@@ -360,6 +371,106 @@ void    ConfigParser::handleErrorFileState()
     if (error_page[0] != "error" || error_page.size() != 3) throw std::runtime_error("Syntax Error::\t< error file in server " + itoa(this->current) + " >");
     this->servers[this->current].setErrorPages(error_page[1], error_page[2]);
     this->currentErrorPages = ERROR;
+}
+
+void    ConfigParser::parseLocations()
+{
+    while (this->index < this->fileContent.size() && this->currentLocationState != END_LOCATION)
+    {
+        switch (currentLocationState)
+        {
+            case LOCATION           : this->handleLocationState()       ;   break;
+            case PREFIX_RED             : this->parsePrefix()               ;   break;
+            default:                                                        break;
+        }
+    }
+    this->currentLocationState = LOCATION;
+}
+
+void    ConfigParser::handleLocationState()
+{
+    static bool locationState = false;
+
+    if (!locationState)
+    {
+        if (this->fileContent[this->index++] != "locations") throw std::runtime_error("Syntax Error::\t< Locations > ");
+        if (this->fileContent[this->index++] != O_PAR) throw std::runtime_error("Syntax Error::\t< open parenthesis doesnt exist for Locations > ");
+        (this->currentLocationState = PREFIX_RED ,locationState = true);
+    }
+    else
+    {
+        if (this->fileContent[this->index] != C_PAR) this->currentLocationState = PREFIX_RED;
+        else (this->index++, this->currentLocationState = END_LOCATION, this->currentServerState = SERVER, locationState = false);
+    }
+
+}
+
+void    ConfigParser::parsePrefix()
+{
+    while (this->index < this->fileContent.size() && this->currentPrefixState != END_PREFIX)
+    {
+        switch (currentPrefixState)
+        {
+            case PREFIX             : this->handlePrefixState()         ;   break;
+            case PATH               : this->handlePathState()           ;   break;
+            case METHODS            : this->handleMethodsPrefixState()  ;   break;
+            default                 :                                       break;
+        }
+    }
+    
+}
+
+void    ConfigParser::handlePrefixState()
+{
+    static bool prefixState = false;
+
+    if (!prefixState)
+    {
+        if (this->fileContent[this->index++] != "prefix") throw std::runtime_error("Syntax Error::\t< Locations > ");
+        if (this->fileContent[this->index++] != O_PAR) throw std::runtime_error("Syntax Error::\t< open parenthesis doesnt exist for Locations > ");
+        (this->currentPrefixState = PATH ,prefixState = true);
+    }
+    else
+    {
+        if (this->fileContent[this->index] != C_PAR) this->currentPrefixState = PREFIX;
+        else (this->index++, this->currentPrefixState = END_PREFIX, this->currentLocationState = END_LOCATION, prefixState = false);
+    }
+}
+
+void    ConfigParser::handlePathState()
+{
+    std::vector<std::string> path;
+    int                      index = this->servers[this->current].getLocations().size() - 1;
+
+    if (!this->servers[this->current].getLocations()[index].getPath().empty())throw std::runtime_error("Syntax Error::\t< Duplicated Path at Location " + itoa(index) + " in server " + itoa(this->current) +" > ");
+    path = splitString(this->fileContent[this->index], " \t\n\r\f\v");
+    if (path.size() != 2 || path[0] != "prefix") throw std::runtime_error("Syntax Error::\t< Prefix at Location " + itoa(index) + " in server " + itoa(this->current) +" > ");
+    this->servers[this->current].getLocations()[index].setPath(path[1]);
+    this->currentPrefixState = METHODS;
+}
+
+void    ConfigParser::handleMethodsPrefixState()
+{
+    std::vector<std::string>                methods;
+    std::string methodsInit[3]      =       {std::string("GET"), std::string("POST"), std::string("DELETE")};
+    int                      i      =       -1;
+    int                      index  =       this->servers[this->current].getLocations().size() - 1;
+
+
+    if (!this->servers[this->current].getLocations()[index].getMethods().empty()) throw std::runtime_error("Syntax Error::\t< Duplicated methods Location> ");
+    methods = splitString(this->fileContent[this->index++], " \t\n\r\f\v");
+    if (methods[0] != "methods" || methods.size() < 2) throw std::runtime_error("Syntax Error::\t< methods location in server " + itoa(this->current) + " >");
+    while (++i < 3) this->servers[this->current].getLocations()[index].setMethods(methodsInit[i], false);
+    i = 0;
+    while (++i < methods.size())
+    {
+
+        // HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEER update this function for current class location
+        if (this->servers[this->current].methodExist(methods[i]) == false) throw std::runtime_error("Syntax Error::\t< method doesnt exist in server " + itoa(this->current) + " >");
+        if (this->servers[this->current].methodValue(methods[i]) == true) throw std::runtime_error("Syntax Error:: \t< method " + methods[i]+ " already exist in server " + itoa(this->current) + " >");
+        this->servers[this->current].updateMethod(methods[i], true);
+    }
+    this->currentServerState = CLIENT_MAX_BODY_SIZE;
 }
 
 
